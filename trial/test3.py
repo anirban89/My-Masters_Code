@@ -1,0 +1,330 @@
+from numpy.fft import fft, ifft, ifftshift,fft2,ifft2;
+from scipy import *;
+from pylab import *;
+
+
+
+def InvPotentialVorticity(field, length=None):
+
+    if length is None:
+        length = 2*pi;
+
+    N = shape(field)[0];
+    #print 'Variance: ', var(field);
+    if(var(field) < 0.00000001): #constant field
+        #print 'field is a constant field';
+        return -field;
+
+    k = array(range(N),dtype=complex128);
+    k = concatenate((range(0,N/2),range(-N/2,0)));
+    k *= (2*pi)/length;
+
+    [KX, KY] = meshgrid(k,k);
+
+    """ We are trying to solve d_yy(eta) + d_xx(eta) - eta = p
+    Therefore, in Fourier space, it will become
+    (-(kx^2 + ky^2) - 1)etaHat = pHat
+    """
+    delsq = -(KX*KX + KY*KY) - 1 ;
+    delsq[0,0] = 1;
+
+    tmp = fft2(field);
+#    tmp = fft(field,axis=0);
+#    tmp = fft(tmp,axis=1);
+
+    tmp = tmp/delsq;
+
+    [xval,yval] = shape(tmp);
+    tmp[xval/3:2*xval/3,yval/3:2*yval/3] = 0;
+
+#    tmp = ifft(tmp,axis=1);
+#    tmp = ifft(tmp,axis=0);
+    tmp = ifft2(tmp);
+
+    return tmp.real;
+
+def InvPotentialVorticityTwoLayer(field, length=None):
+
+    if length is None:
+        length = 2*pi;
+
+    N = shape(field)[0];
+    #print 'Variance: ', var(field);
+    if(var(field) < 0.00000001): #constant field
+        #print 'field is a constant field';
+        return -field/2.0;
+
+    k = array(range(N),dtype=complex128);
+    k = concatenate((range(0,N/2),range(-N/2,0)));
+    k *= (2*pi)/length;
+
+    [KX, KY] = meshgrid(k,k);
+
+    """ We are trying to solve d_yy(eta) + d_xx(eta) - 2*eta = p
+    where eta = (psi-psi2)
+    Therefore, in Fourier space, it will become
+    (-(kx^2 + ky^2) - 2)etaHat = pHat
+    """
+    delsq = -(KX*KX + KY*KY) - 2.0 ;
+    delsq[0,0] = 1;
+
+    tmp = fft2(field);
+#    tmp = fft(field,axis=0);
+#    tmp = fft(tmp,axis=1);
+
+    tmp = tmp/delsq;
+
+    [xval,yval] = shape(tmp);
+    tmp[xval/3:2*xval/3,yval/3:2*yval/3] = 0;
+
+#    tmp = ifft(tmp,axis=1);
+#    tmp = ifft(tmp,axis=0);
+    tmp = ifft2(tmp);
+
+    return tmp.real;
+
+
+def InvLaplacian(field, length=None):
+
+    if length is None:
+        length = 2*pi;
+
+    N = shape(field)[0];
+
+    k = array(range(N),dtype=complex128);
+    k = concatenate((range(0,N/2),range(-N/2,0)));
+    k *= (2*pi)/length;
+
+    [KX, KY] = meshgrid(k,k);
+
+    """ We are trying to solve d_yy(eta) + d_xx(eta)  = p
+    Therefore, in Fourier space, it will become
+    (-(kx^2 + ky^2) )etaHat = pHat
+    """
+    delsq = -(KX*KX + KY*KY) ;
+    delsq[0,0] = 1;
+
+#    tmp = fft(field,axis=0);
+#    tmp = fft(tmp,axis=1);
+    tmp = fft2(field);
+
+    tmp = tmp/delsq;
+
+    [xval,yval] = shape(tmp);
+    tmp[xval/3:2*xval/3,yval/3:2*yval/3] = 0;
+
+#    tmp = ifft(tmp,axis=1);
+#    tmp = ifft(tmp,axis=0);
+    tmp = ifft2(tmp);
+
+    return tmp.real;
+
+def InvPotentialVorticitySine(field, length=None):
+
+    if length is None:
+        length = 2*pi;
+
+    N = shape(field)[0];
+    leny = shape(field)[1];
+    newLen = 2*(leny+1);
+
+    ''' create new array with appropriate dimensions '''
+    new = zeros((N,N));
+
+    for i in arange(leny):
+        new[:,i+1] = field[:,i];
+        new[:,newLen-i-1] = -field[:,i];
+
+    #print 'Variance: ', var(field);
+    if(var(field) < 0.00000001): #constant field
+        #print 'field is a constant field';
+        return -field;
+
+    k = array(range(N),dtype=complex128);
+    k = concatenate((range(0,N/2),range(-N/2,0)));
+    kx = k * (2*pi)/length;
+    ky = k * (2*pi)/(length);
+
+    [KX, KY] = meshgrid(kx,ky);
+
+    """ We are trying to solve d_yy(eta) + d_xx(eta) - eta = p
+    Therefore, in Fourier space, it will become
+    (-(kx^2 + ky^2) - 1)etaHat = pHat
+    """
+    delsq = -(KX*KX + KY*KY) - 1 ;
+    delsq[0,0] = 1;
+
+    tmp = fft2(new);
+#    tmp = fft(field,axis=0);
+#    tmp = fft(tmp,axis=1);
+
+    tmp = tmp/delsq;
+
+    [xval,yval] = shape(tmp);
+    tmp[xval/3:2*xval/3,yval/3:2*yval/3] = 0;
+
+#    tmp = ifft(tmp,axis=1);
+#    tmp = ifft(tmp,axis=0);
+    tmp = ifft2(tmp);
+
+    out = tmp.real;
+    return (out[:,1:leny+1]);
+
+def InvPotentialVorticityCosine(field, length=None):
+
+    if length is None:
+        length = 2*pi;
+
+    #print 'Variance: ', var(field);
+    if(var(field) < 0.00000001): #constant field
+        #print 'field is a constant field';
+        return -field;
+
+    N = shape(field)[0];
+    leny = shape(field)[1];
+    newLen = 2*(leny-1);
+
+    ''' create new array with appropriate dimensions '''
+    new = zeros((N,N));
+
+    for i in arange(leny):
+        new[:,i] = field[:,i];
+
+    for i in arange(leny-1):
+        new[:,newLen-i-1] = field[:,i+1];
+
+
+    k = array(range(N),dtype=complex128);
+    k = concatenate((range(0,N/2),range(-N/2,0)));
+    kx = k * (2*pi)/length;
+    ky = k * (2*pi)/(length);
+
+    [KX, KY] = meshgrid(kx,ky);
+
+    """ We are trying to solve d_yy(eta) + d_xx(eta) - eta = p
+    Therefore, in Fourier space, it will become
+    (-(kx^2 + ky^2) - 1)etaHat = pHat
+    """
+    delsq = -(KX*KX + KY*KY) - 1 ;
+    delsq[0,0] = 1;
+
+    tmp = fft2(new);
+#    tmp = fft(field,axis=0);
+#    tmp = fft(tmp,axis=1);
+
+    tmp = tmp/delsq;
+
+    [xval,yval] = shape(tmp);
+    tmp[xval/3:2*xval/3,yval/3:2*yval/3] = 0;
+
+#    tmp = ifft(tmp,axis=1);
+#    tmp = ifft(tmp,axis=0);
+    tmp = ifft2(tmp);
+
+    out = tmp.real;
+    return (out[:,0:leny]);
+
+
+def partial( x, order=1, length=None, axis=0):
+    """Numerically differentiate `x` using the pseudo-spectral method.
+
+       Parameters
+       ----------
+       x : array_like
+       The periodic data to be differentiated.
+       order : int
+       The order of the derivative to be computed.
+       length : float
+       The length of the domain on which the signal was sampled.
+        axis : int
+        The axis of `x` containing the data to be differentiated.
+
+        Returns
+        -------
+        dx : array, with the same shape as `x`
+        The differentiated data.
+        """
+    if length is None:
+        length = 2 * pi;
+    if axis is None:
+        axis = -1;
+
+    N = x.shape[axis];
+    y = fft(x, axis=axis);
+    numvals = len(y);
+    threshold = int(numvals/6.0);
+    preserveVals = ones(numvals/6);
+    slopeDown = 1/(numvals/6.0 - numvals/2.0);
+    slopeUp = -1/(numvals/2.0 - 5*numvals/6.0);
+    downfilter = exp((arange(numvals/6+1, (numvals/2)+1) -
+    numvals/2.0))[::-1];
+    upfilter = exp(-(arange(numvals/2, (5*numvals/6)+1) -
+    numvals/2.0))[::-1];
+    #downfilter = slopeDown*(arange(numvals/6+1, (numvals/2)+1) - numvals/2.0);
+    #upfilter = slopeUp*(arange(numvals/2, (5*numvals/6)+1) - numvals/2.0);
+
+
+    fftFilter = concatenate((preserveVals, downfilter, upfilter, preserveVals))
+
+    y = (fftFilter * y.transpose()).transpose();
+    
+    k = array(range(N), dtype=complex128) - N/2;
+    k *= 2*pi*1j / length;
+    k = k**order;
+    shp = ones(len(x.shape));
+    shp[axis] = N;
+    k.shape = shp;
+
+    dy = ifftshift(k) * y;
+    dx = ifft(dy, axis=axis).real;
+   # print 'NUMPY'
+   # print dx;
+    return dx;
+
+def partialX(field, order=1, length=None):
+    return partial(field, order, length);
+    
+def partialY(field, order=1, length=None):
+    return partial(field.transpose(), order, length).transpose();
+
+def partialYSine(field, order=1, length=None):
+   
+    '''length of field in y direction is N/2-1 '''
+    if length is None:
+        length=pi; 
+    leny = field.shape[1];    
+    lenx = field.shape[0];
+    new = zeros((lenx,2*(leny+1)));
+    newLen = 2*(leny+1);
+    for i in arange(leny):
+        new[:,i+1] = field[:,i];
+        new[:,newLen-i-1] = -field[:,i];
+
+    out = partial(new.transpose(), order, 2*length).transpose();
+#    return((out[:,1:leny+1])/(pow(2,order)));
+    return((out[:,1:leny+1]));
+
+def partialYCosine(field, order=1, length=None):
+   
+    '''length of field in y direction is N/2+1 '''
+    if length is None:
+        length=pi; 
+    leny = field.shape[1];    
+    lenx = field.shape[0];
+    new = zeros((lenx,2*(leny-1)));
+    newLen = 2*(leny-1);
+    for i in arange(leny):
+        new[:,i] = field[:,i];
+
+    for i in arange(leny-1):    
+        new[:,newLen-i-1] = field[:,i+1];
+
+    out = partial(new.transpose(), order, 2*length).transpose();
+#    return((out[:,1:leny+1])/(pow(2,order)));
+    return((out[:,0:leny]));
+
+def fourier(field,axis=0):
+    return fft(field,axis=axis);
+
+def invFourier(field,axis=0):
+    return ifft(field,axis=axis);

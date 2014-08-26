@@ -1,0 +1,59 @@
+from pylab import *
+from scipy import *
+
+from diffusion import *
+
+N = 300;
+x = linspace(0,2*pi,N+1);
+y = linspace(0,2*pi,N+1);
+print y
+yp = y[1:N/2]
+
+fullField = zeros((N,N));
+sineField = zeros((N,N/2-1))
+
+for i in arange(N):
+	fullField[:,i] = cos(x[0:-1])*sin(y[i]);
+
+for i in arange(N/2-1):
+	sineField[:,i] = cos(x[0:-1])*sin(yp[i]);
+
+
+def diffusion(fields):
+
+    leny = fields.shape[1];    
+    lenx = fields.shape[0];
+    newLen = 2*(leny+1);
+    omegaNew = zeros((lenx,newLen));
+    print shape(omegaNew);
+    for i in arange(leny):
+        print i+1,' ',
+        omegaNew[:,i+1] = fields[:,i];
+        print newLen-i-1,' '
+        omegaNew[:,newLen-i-1] = -fields[:,i];
+
+	diffOmega = spectralDiffusion(dt, omegaNew, args);
+
+    	return(diffOmega[:,1:newLen/2]);
+
+'''
+    figure();
+    hold(True);
+    plot(fullField[3,:]);
+    plot(omegaNew[3,:]);
+
+    figure();
+    imshow(omegaNew-fullField);
+    colorbar();
+    show();
+'''   
+    
+hold(True);
+plot(fullField[1,N/2:N]);
+figure();
+plot(-sineField[1,:]);
+
+show()
+
+diffusion(sineField);
+

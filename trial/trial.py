@@ -1,0 +1,29 @@
+from spectral import *;
+from integrator import *;
+from pylab import *;
+from diffusion import *;
+import scipy as sp;
+import pylab as m;
+import sys;
+import numpy as np;
+#from os.path import expanduser
+#home = expanduser("~");
+import time
+
+N = 10
+
+
+#for i in arange(N):
+    #for j in arange(N):
+        #print j;
+#    print i
+
+ion()
+
+tstart = time.time()               # for profiling
+x = arange(0,2*pi,0.01)            # x-array
+handle, = plot(x,sin(x))
+for i in arange(1,200):
+    handle.set_ydata(sin(x+i/10.0))  # update the data
+    draw()                 
+print 'FPS:' , 200/(time.time()-tstart)

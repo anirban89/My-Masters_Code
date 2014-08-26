@@ -1,0 +1,125 @@
+
+from spectral import *;
+from integrator import *;
+from pylab import *;
+from diffusion import *;
+from math import *
+import scipy as sp;
+import pylab as m;
+import sys;
+import numpy as np;
+from os.path import expanduser
+from scipy import *
+
+home = expanduser("~");
+
+resume = 0;
+#path = home+'/testjetBickleyLDinfBeta5';
+path = home+'/LDinfBeta5test1';
+#LD = 1;
+
+
+Beta = 5;
+
+def calcPower(field):
+    [x,y] = shape(field);
+    power = zeros(y);
+
+    for i in arange(y):
+        val = fft(field[:,i]);
+        power = power + abs(val*val.conj());
+
+
+    power = power/y;
+    print log(power)
+    return log(power[0:N/3]);
+
+
+
+N = 128;
+t1 = 1;
+T_tot = 500 ; 
+N_t = 500 ;
+tn = linspace(t1,T_tot, N_t);
+Omega = zeros((N,N));
+psi_n = zeros((N,N));
+Energy = zeros((N_t));
+Enstrophy = zeros((N_t));
+EnsEnFr = zeros((N_t));
+Anisotropy = zeros((N_t));
+U = zeros((N,N));
+Uyy = zeros((N,N));
+
+for i in arange(N_t) :
+	ik = (i+1)*1
+	Omega = np.load(path+'/PV'+str(ik)+'.npy');
+	psi_n = InvPotentialVorticity(Omega);
+	u_n = -partialY(psi_n);
+	v_n = partialX(psi_n);
+	Energy[i] = mean(u_n*u_n + v_n*v_n) ;
+	Enstrophy[i] = mean(Omega * Omega);
+	Anisotropy[i] = mean(u_n*u_n)/(mean(u_n*u_n) + mean(v_n*v_n))
+EnsEnFr = Enstrophy/Energy;
+figure(figsize= (14,6));
+subplot(121)
+#plot(tn,Energy)
+#title(" Energy ",fontsize=16)
+
+#plot(tn,Enstrophy)
+#title(" Enstrophy ",fontsize=16)
+#subplot(223)
+plot(tn,EnsEnFr)
+title(" Enstrophy/Energy ",fontsize=16)
+#subplot(224)
+
+subplot(122)
+plot(tn,Anisotropy)
+title(" Anisotropy ",fontsize=16)
+#savefig('/home/joymm/anirban/Bickley-Vars_LD'+str(LD)+'Beta-'+str(Beta)+'.png');
+"""
+Omega = np.load(path+'/PV'+str(1)+'.npy');
+psi_n = InvPotentialVorticity(Omega);
+figure(figsize= (15,6))
+subplot(121)
+imshow(Omega.transpose(),aspect='auto',extent=(0,2*pi,0,2*pi));
+title("PV field at t = 0",fontsize=16)
+colorbar()
+subplot(122)
+imshow(psi_n.transpose(),aspect='auto',extent=(0,2*pi,0,2*pi));
+title(" Streamfunction field at t = 0",fontsize=16)
+colorbar()
+#savefig('/home/joymm/anirban/Bickley-fields_LD'+str(LD)+'Beta-'+str(Beta)+'t-1.png');
+"""
+
+Omega = np.load(path+'/PV'+str(500)+'.npy');
+psi_n = InvPotentialVorticity(Omega);
+U = -partialY(psi_n);
+Uyy = partialY(U,2);
+
+
+figure(figsize= (15,6))
+subplot(121)
+
+imshow(psi_n.transpose(),aspect='auto',extent=(0,2*pi,0,2*pi));
+title(" Streamfunction field at t = 500",fontsize=16)
+colorbar()
+
+
+#imshow(Omega.transpose(),aspect='auto',extent=(0,2*pi,0,2*pi));
+#title("PV field at t = 500",fontsize=16)
+#colorbar()
+
+
+
+subplot(122)
+
+imshow((Uyy-Beta).transpose(),aspect='auto',extent=(0,2*pi,0,2*pi));
+title(" Rayleigh-Kuo Criterion  t = 500",fontsize=16)
+colorbar()
+
+
+#savefig('/home/joymm/anirban/Bickley-fields_LD'+str(LD)+'Beta-'+str(Beta)+'t-1000.png');
+show();
+   
+
+
